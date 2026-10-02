@@ -1,0 +1,28 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="pytest" />
+          <option value="playwright" />
+          <option value="pytest-playwright" />
+          <option value="requests" />
+          <option value="faker" />
+          <option value="fastapi" />
+          <option value="uvicorn" />
+          <option value="pydantic" />
+          <option value="pyjwt" />
+          <option value="python-multipart" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyStringConversionWithoutDunderMethodInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredTypes">
+        <list>
+          <option value="staff_on_skillspace.Page_Object_OOP.class_lifecycle.ProductHelper" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
