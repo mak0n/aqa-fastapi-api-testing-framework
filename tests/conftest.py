@@ -78,7 +78,11 @@ def test_item(regular_user, item_service):
         title=item_title,
     )
     assert create_resp.status_code in (201, 200)
-    yield create_resp
+    item_data = create_resp.json()
+
+    yield item_data
+
+    item_service.delete_item(item_id=item_data["id"], token=regular_user["token"])
 
 
 @pytest.fixture(scope="session")
