@@ -2,6 +2,9 @@ import pytest
 import psycopg2
 import uuid
 
+from sqlalchemy.engine.create import create_engine
+from sqlalchemy.orm.session import sessionmaker
+
 from constants import  ADMIN_EMAIL, ADMIN_PASSWORD
 from services.item_service import ItemService
 from services.user_service import UserService
@@ -77,12 +80,23 @@ def test_item(regular_user, item_service):
         token=regular_user["token"],
         title=item_title,
     )
-    assert create_resp.status_code in (201, 200)
+    assert create_resp.status_code in (200, 201)
     item_data = create_resp.json()
 
     yield item_data
 
+
     item_service.delete_item(item_id=item_data["id"], token=regular_user["token"])
+
+DATABASE_URL = "postgresql+psycopg2://postgres:usfHO8BAY5@localhost:5432/app"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
+
+@pytest.fixture(scope="function")
+def db_session():
+    session = SessionLocal()
+    yield session
+    session.close()
 
 
 @pytest.fixture(scope="session")
