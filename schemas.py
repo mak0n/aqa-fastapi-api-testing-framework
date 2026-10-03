@@ -4,13 +4,15 @@ from pydantic import BaseModel
 class UserPublic(BaseModel):
     id: str
     email: str
-    full_name: str
-    is_active: bool | None = True
-    is_superuser: bool | None = False
+    full_name: str | None = None
+    is_active: bool = True
+    is_superuser: bool = False
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+
 
 class ItemPublic(BaseModel):
     id: str

@@ -2,8 +2,8 @@ import pytest
 import psycopg2
 import uuid
 
-from sqlalchemy.engine.create import create_engine
-from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from constants import  ADMIN_EMAIL, ADMIN_PASSWORD
 from services.item_service import ItemService
@@ -99,14 +99,14 @@ def db_session():
     session.close()
 
 
-@pytest.fixture(scope="session")
-def db_connection():
-    connection = psycopg2.connect(
-        host="45.145.65.134",
-        port=5432,
-        database="app",
-        user="postgres",
-        password="usfHO8BAY5"
-    )
-    yield connection
-    connection.close()
+# @pytest.fixture(scope="session")
+# def db_connection():
+#     connection = psycopg2.connect(
+#         host="45.145.65.134",
+#         port=5432,
+#         database="app",
+#         user="postgres",
+#         password="usfHO8BAY5"
+#     )
+#     yield connection
+#     connection.close()
