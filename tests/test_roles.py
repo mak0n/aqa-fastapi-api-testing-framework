@@ -1,3 +1,6 @@
+import secrets
+import uuid
+
 import pytest
 
 
@@ -45,7 +48,12 @@ def test_delete_user(role_fixture, expected_status,request,user_service):
 
 def test_item_ownership(regular_user, user_service, item_service):
     user_a = regular_user
-    user_b = user_service.signup()
+    user_b_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+    user_b_password = secrets.token_hex(8)
+    user_b_signup = user_service.signup(email=user_b_email, password=user_b_password)
+    assert user_b_signup.status_code == 200
+    user_b_login = user_service.login(email=user_b_email, password=user_b_password)
+    assert user_b_login.status_code == 200
     item = item_service.create_item(token=user_a["token"])
-    response = item_service.update_item(item_id=item.id, token=user_b["token"], title="New title")
-    assert response.status_code in (403, 404)
+    response = item_service.update_item(item_id=item.json()["id"], token=user_b_login.json()["access_token"], title="New title")
+    assert response.status_code == 400

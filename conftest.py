@@ -27,6 +27,7 @@ def user_service(api_client):
 def item_service(api_client):
     return ItemService(api_client)
 
+@pytest.fixture
 def regular_user(user_service):
     email = f"test_{uuid.uuid4().hex[:8]}@example.com"
     password = "password123"

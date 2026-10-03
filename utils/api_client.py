@@ -12,8 +12,9 @@ class BaseApiClient:
         if kwargs.get("timeout") is None:
             kwargs["timeout"] = self.timeout
         if token:
-            headers = kwargs.setdefault("headers", {})
-            headers["Authorization"] = f"Bearer {token}"
+            if kwargs.get("headers") is None:
+                kwargs["headers"] = {}
+            kwargs["headers"]["Authorization"] = f"Bearer {token}"
         url = f"{self.base_url.rstrip('/')}/{endpoint.lstrip('/')}"
         return self.session.request(method=method, url=url, **kwargs)
 
