@@ -47,6 +47,7 @@ def test_update_item_and_verify_in_db(regular_user, item_service, test_item, db_
                                             description="Updated Description")
     assert updated_item.status_code == 200
     db_item = db_session.query(Item).filter(Item.id == item.json()["id"]).first()
+    # or db_session.scalars(select(Item).where(Item.id == item.json()["id"])).first()
     assert db_item is not None
     assert db_item.title == "Updated Title"
     assert db_item.description == "Updated Description"
