@@ -11,12 +11,6 @@ class UserService:
     def __init__(self, client: BaseApiClient):
         self.client = client
 
-    def _get_headers(self, token: str | None = None, headers: dict| None = None) -> dict:
-        if headers:
-            return headers
-        else:
-            return {"Authorization": f"Bearer {token}"}
-
     def signup(self,
                email: str | None = None,
                password: str | None = None,
@@ -28,20 +22,25 @@ class UserService:
             password = secrets.token_hex(8)
         if full_name is None:
             full_name = fake.name()
-        return self.client.post("api/v1/signup",
-                                json={"email": email,
-                                      "password": password,
-                                      "full_name": full_name,
-                                      **kwargs}
-                                )
+        payload = {"email": email, "password": password, "full_name": full_name}
+        return self.client.post(
+            "/api/v1/users/signup",
+            json=payload,
+            **kwargs
+        )
 
-    def get_me(self,
-               token: str | None = None,
-               headers: dict | None = None,
-               **kwargs) -> Response:
-        if headers is None:
-            if token is None:
-                headers = self._get_headers(token=token)
-            else:
-                assert headers is not None, "Ручка защищена, нужен или токен или готовый заголовок с токеном"
-        return self.client.send_request(method="GET", endpoint="/api/v1/users/", headers=headers, **kwargs)
+    def login(self, email: str, password: str) -> Response:
+        return self.client.post(
+            "/api/v1/login/access-token",
+            data={"username": email, "password": password}
+        )
+
+    def get_me(self, token: str | None = None, headers: dict | None = None, **kwargs) -> Response:
+        return self.client.get("/api/v1/users/me", token=token, headers=headers, **kwargs)
+
+    def get_users(self, token: str | None = None, headers: dict | None = None, params: dict | None = None,
+                  **kwargs) -> Response:
+        return self.client.get("/api/v1/users/", token=token, headers=headers, params=params, **kwargs)
+
+    def delete_user(self, user_id: str, token: str | None = None, headers: dict | None = None, **kwargs) -> Response:
+        return self.client.delete(f"/api/v1/users/{user_id}", token=token, headers=headers, **kwargs)

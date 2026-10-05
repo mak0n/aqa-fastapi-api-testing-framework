@@ -1,43 +1,113 @@
 import pytest
-import requests
 import psycopg2
 import uuid
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from constants import  ADMIN_EMAIL, ADMIN_PASSWORD
+from services.item_service import ItemService
+from services.user_service import UserService
+from utils.api_client import BaseApiClient
+
+
 @pytest.fixture(scope="session")
 def base_url():
-    return "https://localhost:8000"
+    return "http://localhost:8000"
 
-@pytest.fixture(scope="session")
-def db_connection():
-    connection = psycopg2.connect(
-        host="45.145.65.134",
-        port=5432,
-        database="app",
-        user="postgres",
-        password="usfHO8BAY5"
-    )
-    yield connection
-    connection.close()
+@pytest.fixture(scope="function")
+def api_client(base_url):
+    return BaseApiClient(base_url)
 
 @pytest.fixture
-def admin_user(base_url):
-    # ТВОЯ ЗАДАЧА: Создай админа
-    # 1. Signup с уникальным email
-    # 2. Сделай is_superuser=True (через БД или отдельный endpoint)
-    # 3. Login
-    # 4. Верни {"email": ..., "token": ..., "headers": {...}}
-    pass
+def user_service(api_client):
+    return UserService(api_client)
 
 @pytest.fixture
-def regular_user(base_url):
-    # ТВОЯ ЗАДАЧА: Создай обычного пользователя
-    pass
+def item_service(api_client):
+    return ItemService(api_client)
+
+@pytest.fixture
+def regular_user(user_service):
+    email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+    password = "password123"
+
+    signup_res = user_service.signup(email=email, password=password)
+    assert signup_res.status_code in (200, 201)
+    user_id = signup_res.json()["id"]
+
+    login_res = user_service.login(email=email, password=password)
+    assert login_res.status_code == 200
+    token = login_res.json()["access_token"]
+
+    yield {
+        "id": user_id,
+        "email": email,
+        "password": password,
+        "token": token,
+        "headers": {"Authorization": f"Bearer {token}"}
+    }
+
+
+@pytest.fixture
+def admin_user(user_service):
+    login_res = user_service.login(ADMIN_EMAIL, ADMIN_PASSWORD)
+    assert login_res.status_code == 200
+    token = login_res.json()["access_token"]
+
+    yield {
+        "id": None,
+        "email": ADMIN_EMAIL,
+        "password": ADMIN_PASSWORD,
+        "token": token,
+        "headers": {"Authorization": f"Bearer {token}"}
+    }
+
 
 @pytest.fixture
 def guest():
-    return {"email": None, "token": None, "headers": {}}
+    return {
+        "id": None,
+        "email": None,
+        "password": None,
+        "token": None,
+        "headers": {}
+    }
 
 @pytest.fixture
-def test_item(regular_user, base_url):
-    # ТВОЯ ЗАДАЧА: Создай item + cleanup
-    pass
+def test_item(regular_user, item_service):
+    item_title = f"Test_item_{uuid.uuid4().hex[:8]}"
+    create_resp = item_service.create_item(
+        token=regular_user["token"],
+        title=item_title,
+    )
+    assert create_resp.status_code in (200, 201)
+    item_data = create_resp.json()
+
+    yield item_data
+
+
+    item_service.delete_item(item_id=item_data["id"], token=regular_user["token"])
+
+DATABASE_URL = "postgresql+psycopg2://postgres:usfHO8BAY5@localhost:5432/app"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
+
+@pytest.fixture(scope="function")
+def db_session():
+    session = SessionLocal()
+    yield session
+    session.close()
+
+
+# @pytest.fixture(scope="session")
+# def db_connection():
+#     connection = psycopg2.connect(
+#         host="45.145.65.134",
+#         port=5432,
+#         database="app",
+#         user="postgres",
+#         password="usfHO8BAY5"
+#     )
+#     yield connection
+#     connection.close()
