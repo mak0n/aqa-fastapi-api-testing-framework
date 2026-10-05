@@ -39,7 +39,7 @@ def test_login_success(user_service):
                              "invalid_password",
                              "empty_password"
                          ])
-def test_signup_validation(user_service, email, password, expected_status):
+def test_signup_validation(user_service, email, password):
     signup_resp = user_service.signup(email=email, password=password)
     assert signup_resp.status_code == 422
 

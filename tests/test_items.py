@@ -40,7 +40,6 @@ def test_create_item_validation(regular_user, item_service):
 def test_update_item_and_verify_in_db(regular_user, item_service, test_item, db_session):
     item = item_service.create_item(token=regular_user["token"],
                              title=f"My Unique{uuid.uuid4().hex[:6]}Title")
-    print(item)
     updated_item = item_service.update_item(item_id=item.json()["id"],
                                             token=regular_user["token"],
                                             title="Updated Title",
