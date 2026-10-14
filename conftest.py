@@ -9,6 +9,7 @@ from config import ADMIN_EMAIL, ADMIN_PASSWORD, BASE_URL, DATABASE_URL
 from services.item_service import ItemService
 from services.user_service import UserService
 from utils.api_client import BaseApiClient
+from utils.cleanup import cleanup_each
 
 
 @pytest.fixture(scope="session")
@@ -55,6 +56,8 @@ def user_cleanup(user_service, admin_user):
     и не может убрать запись за собой.
     Повторный DELETE с 404 здесь нормален: тест мог уже удалить пользователя
     как проверяемое действие. В самом тесте 404 успехом удаления не считается.
+    Ошибка одного id не прерывает цикл: остальные пользователи всё равно
+    удаляются, а список провалов всплывает одним исключением в конце.
     """
     created_ids: list[str] = []
 
@@ -65,12 +68,11 @@ def user_cleanup(user_service, admin_user):
 
     yield register
 
-    for user_id in reversed(created_ids):
-        response = user_service.delete_user(user_id=user_id, token=admin_user["token"])
-        assert response.status_code in (200, 404), (
-            f"Не удалось удалить пользователя {user_id}: "
-            f"{response.status_code} {response.text}"
-        )
+    cleanup_each(
+        created_ids,
+        lambda user_id: user_service.delete_user(user_id=user_id, token=admin_user["token"]),
+        lambda user_id: f"user {user_id}",
+    )
 
 
 @pytest.fixture
@@ -123,11 +125,11 @@ def item_cleanup(item_service, user_cleanup):
 
     yield register
 
-    for item_id, token in reversed(created):
-        response = item_service.delete_item(item_id=item_id, token=token)
-        assert response.status_code in (200, 404), (
-            f"Не удалось удалить item {item_id}: {response.status_code} {response.text}"
-        )
+    cleanup_each(
+        created,
+        lambda item: item_service.delete_item(item_id=item[0], token=item[1]),
+        lambda item: f"item {item[0]}",
+    )
 
 
 @pytest.fixture
