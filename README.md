@@ -11,6 +11,17 @@
 
 Тесты не поднимают сервер и не накатывают миграции. Стенд должен быть жив до `pytest`.
 
+## Стенд
+
+Из каталога API:
+
+```bash
+docker compose up -d
+curl http://localhost:8000/api/v1/utils/health-check/
+```
+
+Ответ `true` — можно запускать тесты.
+
 ## Установка
 
 Из корня репозитория:
@@ -110,5 +121,64 @@ schemas.py           pydantic-модели ответов
 models.py            таблицы user и item для SQLAlchemy
 services/            обёртки над URL пользователей и items
 utils/api_client.py  requests.Session
+utils/cleanup.py     цикл teardown: ошибка одного id не останавливает остальные
 tests/               сценарии
+```
+
+## Прогон коммита
+
+Лог снят с чистого дерева коммита `23329530c4c84fcc1522dfe90b90440bcc2da255` (`fix(tests): не прерывать очистку на ошибке одного ресурса`), ветка `practice/gorohov.maksimdmitrievich`. Скриншот сюда не кладётся: в выводе есть SHA, команда и окружение.
+
+```text
+commit: 23329530c4c84fcc1522dfe90b90440bcc2da255
+subject: fix(tests): не прерывать очистку на ошибке одного ресурса
+branch: practice/gorohov.maksimdmitrievich
+status:
+command: pytest -vv
+cwd: C:\Users\maksi\PycharmProjects\fastapi-api-testing-framework
+os: Microsoft Windows NT 10.0.26300.0
+python: 3.11.15 (main, Jun  2 2026, 22:29:49) [MSC v.1944 64 bit (AMD64)]
+pytest: pytest 8.0.0
+packages:
+Faker==20.1.0 httpx==0.28.1 pydantic==2.14.0 pytest==8.0.0 pytest-xdist==3.5.0 python-dotenv==1.2.4 requests==2.31.0 ruff==0.17.0 SQLAlchemy==2.1.4 tenacity==9.1.4
+BASE_URL=http://localhost:8000
+============================= test session starts =============================
+platform win32 -- Python 3.11.15, pytest-8.0.0, pluggy-1.6.0 -- C:\Users\maksi\AppData\Local\Temp\fastapi-req-check\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\maksi\PycharmProjects\fastapi-api-testing-framework
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1, Faker-20.1.0, xdist-3.5.0
+collecting ... collected 28 items
+
+tests/test_auth.py::test_signup_success PASSED                           [  3%]
+tests/test_auth.py::test_login_success PASSED                            [  7%]
+tests/test_auth.py::test_signup_validation[invalid_email] PASSED         [ 10%]
+tests/test_auth.py::test_signup_validation[empty_email] PASSED           [ 14%]
+tests/test_auth.py::test_signup_validation[invalid_password] PASSED      [ 17%]
+tests/test_auth.py::test_signup_validation[empty_password] PASSED        [ 21%]
+tests/test_cleanup.py::test_cleanup_keeps_going_after_http_error PASSED  [ 25%]
+tests/test_cleanup.py::test_cleanup_reports_each_failed_status[500] PASSED [ 28%]
+tests/test_cleanup.py::test_cleanup_reports_each_failed_status[403] PASSED [ 32%]
+tests/test_cleanup.py::test_cleanup_continues_after_exception PASSED     [ 35%]
+tests/test_cleanup.py::test_cleanup_accepts_200_and_404 PASSED           [ 39%]
+tests/test_items.py::test_create_item_success PASSED                     [ 42%]
+tests/test_items.py::test_create_item_negative_validation[-422-string_too_short] PASSED [ 46%]
+tests/test_items.py::test_create_item_negative_validation[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-422-string_too_long] PASSED [ 50%]
+tests/test_items.py::test_create_item_validation PASSED                  [ 53%]
+tests/test_items.py::test_update_item_and_verify_in_db PASSED            [ 57%]
+tests/test_items.py::test_delete_item PASSED                             [ 60%]
+tests/test_roles.py::test_get_all_users_access[admin] PASSED             [ 64%]
+tests/test_roles.py::test_get_all_users_access[regular] PASSED           [ 67%]
+tests/test_roles.py::test_get_all_users_access[guest] PASSED             [ 71%]
+tests/test_roles.py::test_delete_user[admin] PASSED                      [ 75%]
+tests/test_roles.py::test_delete_user[regular] PASSED                    [ 78%]
+tests/test_roles.py::test_delete_user[guest] PASSED                      [ 82%]
+tests/test_roles.py::test_item_ownership PASSED                          [ 85%]
+tests/test_users.py::test_success_signup_user_in_db PASSED               [ 89%]
+tests/test_users.py::test_read_user_authorized PASSED                    [ 92%]
+tests/test_users.py::test_cascade_verification PASSED                    [ 96%]
+tests/test_users.py::test_get_user PASSED                                [100%]
+
+============================= 28 passed in 10.80s =============================
 ```
